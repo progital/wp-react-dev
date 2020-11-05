@@ -1,0 +1,49 @@
+.wrd-box {
+  display: flex;
+  flex-wrap: wrap;
+  &.wrd-space-5 > div:not(:last-child) {
+    margin-bottom: 5px;
+  }
+}
+
+.wrd-row {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  &.wrd-space-5 > *:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.wrd-stack {
+  display: flex;
+  flex-direction: column;
+  &.wrd-space-5 > div:not(:last-child) {
+    margin-bottom: 5px;
+  }
+}
+
+.wrd-pt-5 {
+  padding-top: 5px;
+}
+
+.wrd-img-150 {
+  max-height: 150px;
+}
+
+.wrd-img-wrap {
+  position: relative;
+  .notice-dismiss {
+    &:hover:before,
+    &:focus:before {
+      color: #c00;
+    }
+    &:before {
+      font-size: 20px;
+      line-height: 22px;
+      height: 22px;
+      width: 22px;
+      color: #ccc;
+    }
+  }
+}
