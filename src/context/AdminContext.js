@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  useReducer,
-} from 'react';
+import React, { createContext, useContext, useState, useReducer } from 'react';
 
 const initValues =
   (window.wpreactdevOptions && window.wpreactdevOptions.settings) || {};

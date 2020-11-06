@@ -17,23 +17,8 @@ const FrontendContext = createContext();
 function FrontendContextProvider({ children, ...props }) {
   const [selected, setSelected] = useState(savedUrl);
 
-  const settings = { url: selected };
-
-  const SettingsInput = () => (
-    <>
-      <input
-        type="hidden"
-        value={JSON.stringify(settings)}
-        name="wpreactdev-input-user-options"
-      />
-      <input type="hidden" value={postId} name="wpreactdev-input-post-id" />
-    </>
-  );
-
   return (
-    <FrontendContext.Provider
-      value={{ selected, setSelected, SettingsInput, images }}
-    >
+    <FrontendContext.Provider value={{ selected, setSelected, images, postId }}>
       {children}
     </FrontendContext.Provider>
   );

@@ -174,7 +174,7 @@ class WPDevReactFeature
 
   // saves user settings in post meta
   // ATTENTION! This code is not exactly production ready
-  // it lacks any authentication, for one thing
+  // it lacks any authentication or validation, for one thing
   // and you don't want anyone saving anything in your post meta
   public function saveUserSettings()
   {
@@ -197,6 +197,8 @@ class WPDevReactFeature
     }
 
     update_post_meta($post_id, self::META_USER_SELECTION, $json);
+    // exit because this is expected to be an AJAX request
+    exit;
   }
 
   // retrieves app settings for a post (frontend and backend)

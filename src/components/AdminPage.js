@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useAdminState } from 'context/AdminContext';
 import useMediaUpload from 'hooks/useMediaUpload';
-import { Box, Row, Stack } from 'components/Core';
+import { Box, Row } from 'components/Core';
 
 const AdminPage = (props) => {
   const {
@@ -11,7 +11,7 @@ const AdminPage = (props) => {
     images,
     updateImages,
   } = useAdminState();
-  const { Uploader, openUploader } = useMediaUpload({ changeCb: loadImageUrl });
+  const { Uploader, openUploader } = useMediaUpload({ onChange: loadImageUrl });
 
   function loadImageUrl(url) {
     updateImages({ action: 'add', url });

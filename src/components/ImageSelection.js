@@ -1,21 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { useFrontendState } from 'context/FrontendContext';
-import { Box, Row, Stack } from 'components/Core';
+import { Row } from 'components/Core';
+import axios from 'axios';
 
 const ImageSelection = (props) => {
-  const { selected, setSelected, SettingsInput, images } = useFrontendState();
+  const { selected, setSelected, images, postId } = useFrontendState();
   // what state the app is in now
   // `selecting` - making selection
   // `saved` - the selection is saved
+  // `saving` - doing the request
   const [status, setStatus] = useState(selected ? 'saved' : 'selecting');
 
   const saveSelection = () => {
-    setStatus('saved');
+    setStatus('saving');
   };
+
+  useEffect(() => {
+    if (status !== 'saving') {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append(
+      'wpreactdev-input-user-options',
+      JSON.stringify({
+        url: selected,
+      })
+    );
+    formData.append('wpreactdev-input-post-id', postId);
+
+    axios.post('/', formData).then((response) => {
+      setStatus('saved');
+    });
+  }, [status]);
 
   return (
     <>
-      <SettingsInput />
       <p>Select image</p>
       <Row className="wrd-space-5">
         {images.map((url, idx) => (
@@ -47,6 +67,11 @@ const ImageSelection = (props) => {
       {status === 'saved' ? (
         <button type="button" onClick={() => setStatus('selecting')}>
           Select Again
+        </button>
+      ) : null}
+      {status === 'saving' ? (
+        <button type="button" disabled>
+          Saving...
         </button>
       ) : null}
     </>

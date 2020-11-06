@@ -1,16 +1,17 @@
 import React, { useRef } from 'react';
-// import { MediaUpload } from '@wordpress/media-utils';
 const utils = (window.wp && window.wp.mediaUtils) || {};
 const { MediaUpload } = utils;
 
-// TODO handle error ?
-const useMediaUpload = ({ changeCb } = {}) => {
+// TODO you may want to handle missing MediaUpload
+// if, for example, it was not enqueued on the WP side
+const useMediaUpload = ({ onChange } = {}) => {
   const opener = useRef(null);
+  // parameters can be passed to the callback
   const params = useRef(undefined);
 
   function selectImage(value) {
-    if (typeof changeCb === 'function') {
-      changeCb(value.url, params.current);
+    if (typeof onChange === 'function') {
+      onChange(value.url, params.current);
     }
   }
 
@@ -20,8 +21,6 @@ const useMediaUpload = ({ changeCb } = {}) => {
       opener.current.open();
       return;
     }
-
-    console.log('Opener not available');
   }
 
   const Uploader = (props) => {
