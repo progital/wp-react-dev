@@ -1,9 +1,14 @@
 import React from 'react';
-// import LayoutUpload from 'components/LayoutUpload';
-// import { EditorContextProvider } from 'context/EditorContext';
+import { FrontendContextProvider } from 'context/FrontendContext';
+import ImageSelection from 'components/ImageSelection';
+import 'assets/scss/frontend.scss';
 
 const App = () => {
-  return <h1>Frontend App !!!!!</h1>;
+  return (
+    <FrontendContextProvider>
+      <ImageSelection />
+    </FrontendContextProvider>
+  );
 };
 
 export default App;

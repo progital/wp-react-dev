@@ -1,0 +1,11 @@
+@import 'common';
+
+.wrd-img-selected {
+  outline: 3px solid red;
+}
+
+.wrd-btn-select {
+  &:disabled {
+    background-color: lightgrey;
+  }
+}

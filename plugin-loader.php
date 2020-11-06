@@ -2,10 +2,11 @@
 
 /**
  * Plugin Name:       WP + React
- * Plugin URI:
+ * Plugin URI:        https://github.com/progital/wp-react-dev
  * Description:       Practical React development for WordPress.
  * Version:           0.0.1
  * Author:            Progital
+ * Author URI:        https://github.com/progital
  * Requires at least: 5.0
  * Requires PHP:      7.0
  *
@@ -19,23 +20,33 @@ class WPDevReactFeature
 {
   // id of the container element where react app is rendered into
   const REACT_APP_ROOT = 'wp-react-dev-app';
-  // name of the meta field containing plugin's options
+
+  // name of the meta field containing user selection
+  const META_USER_SELECTION = 'wpreactdev_user_selection';
+
+  // name of the meta field that enabled the plugin for a particular post
   const META_OPTIONS = 'wpreactdev_app_opts';
+
   // name of the meta field that enabled the plugin for a particular post
   const META_ENABLED = 'wpreactdev_app_enabled';
+
   // enabled for this post type
   const POST_TYPE = 'page';
+
   // input name - admin options
   const INPUT_NAME_ADMIN_OPTIONS = 'wpreactdev-input-admin-options';
-  // input name - frontend options
+
+  // input names - frontend options
   const INPUT_NAME_USER_OPTIONS = 'wpreactdev-input-user-options';
+  const INPUT_NAME_POST_ID = 'wpreactdev-input-post-id';
+
   // plugin version
   const VERSION = '0.0.1';
 
-  private static $instance;
+  protected static $instance;
 
   // we don't want additional copies of this class created
-  private function __construct()
+  protected function __construct()
   {
     $this->addHooks();
   }
@@ -63,7 +74,7 @@ class WPDevReactFeature
       return false;
     }
 
-    return (bool)get_post_meta(self::META_ENABLED, $post->ID, true);
+    return (bool)get_post_meta($post->ID, self::META_ENABLED, true);
   }
 
   // adds a placeholder for the admin app
@@ -84,6 +95,23 @@ class WPDevReactFeature
       'normal',
       'high'
     );
+  }
+
+  // shortcode
+  public function renderFrontend($atts)
+  {
+    if (!self::isEnabled()) {
+      return '';
+    }
+
+    ob_start()
+    ?>
+      <div id="<?= self::REACT_APP_ROOT ?>">
+        Loading the app, please hold on...
+      </div>
+    <?php
+
+    return ob_get_clean();
   }
 
   // enqueues frontend js
@@ -124,6 +152,8 @@ class WPDevReactFeature
   }
 
   // saves app settings in post meta
+  // ATTENTION! This code is not exactly production ready
+  // it lacks any authentication, for one thing
   public function saveSettings($post_id)
   {
     $json = $_POST[self::INPUT_NAME_ADMIN_OPTIONS] ?? null;
@@ -142,8 +172,35 @@ class WPDevReactFeature
     update_post_meta($post_id, self::META_OPTIONS, $json);
   }
 
+  // saves user settings in post meta
+  // ATTENTION! This code is not exactly production ready
+  // it lacks any authentication, for one thing
+  // and you don't want anyone saving anything in your post meta
+  public function saveUserSettings()
+  {
+    // we want this function to run only on frontend
+    if (is_admin()) {
+      return;
+    }
+
+    $json = $_POST[self::INPUT_NAME_USER_OPTIONS] ?? null;
+    $post_id = $_POST[self::INPUT_NAME_POST_ID] ?? null;
+    if (empty($json) || empty($post_id)) {
+      return;
+    }
+
+    $json = wp_unslash($json);
+    $decoded = json_decode($json, true);
+    // sanity check
+    if (!is_array($decoded)) {
+      return;
+    }
+
+    update_post_meta($post_id, self::META_USER_SELECTION, $json);
+  }
+
   // retrieves app settings for a post (frontend and backend)
-  public function getPostOptions()
+  protected function getAdminOptions()
   {
     global $post;
     if (!is_object($post) || $post->post_type !== self::POST_TYPE) {
@@ -159,19 +216,43 @@ class WPDevReactFeature
     return json_decode($opts, true);
   }
 
+  // retrieves app settings for a post (frontend and backend)
+  protected function getUserSettings()
+  {
+    global $post;
+    if (!is_object($post) || $post->post_type !== self::POST_TYPE) {
+      return false;
+    }
+
+    $opts = get_post_meta($post->ID, self::META_USER_SELECTION, true);
+
+    return $opts ? json_decode($opts, true) : null;
+  }
+
   // injects global variables in js (frontend and backend)
   protected function addGlobalVars()
   {
-    $vars = json_encode([
-      'settings' => $this->getPostOptions(),
-    ]);
+    global $post;
+
+    $vars = [
+      'settings' => $this->getAdminOptions(),
+      'postId' => is_object($post) ? $post->ID : 0,
+    ];
+
+    $selection = $this->getUserSettings();
+
+    if ($selection) {
+      $vars['selection'] = $selection;
+    }
+
+    $json = json_encode($vars);
 
     // a convoluted way of adding inline script via WordPress API
     wp_register_script('wpreactdev-vars', '', [], '', true);
     wp_enqueue_script('wpreactdev-vars');
     wp_add_inline_script(
       'wpreactdev-vars',
-      sprintf('window.wpreactdevOptions = %s;', $vars)
+      sprintf('window.wpreactdevOptions = %s;', $json)
     );
   }
 
@@ -181,6 +262,8 @@ class WPDevReactFeature
     add_action('add_meta_boxes', [$this, 'addAdminMetaBox']);
     add_action('admin_enqueue_scripts', [$this, 'addAdminScripts'], 1000);
     add_action(sprintf('save_post_%s', self::POST_TYPE), [$this, 'saveSettings']);
+    add_action('wp_loaded', [$this, 'saveUserSettings']);
+    add_shortcode('wpd-frontend', [$this, 'renderFrontend']);
   }
 
   // Get the URL directory path (with trailing slash)
